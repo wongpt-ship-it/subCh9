@@ -118,8 +118,8 @@
         /* 加減消元法專用樣式 */
         .math-column {
             display: grid;
-            /* 增加最左側的運算符號欄位 (7個欄位) */
-            grid-template-columns: 30px 40px 50px 30px 40px 30px 40px;
+            /* 第一個欄位設為 auto，讓它能根據符號自動調整寬度，避免在 iPad 上空間不足 */
+            grid-template-columns: auto 40px 50px 30px 40px 30px 40px;
             gap: 10px;
             font-size: 28px;
             justify-content: center;
@@ -129,9 +129,12 @@
         }
 
         .op-sign {
-            color: #fd7e14; /* 亮橘色讓運算符號更明顯 */
+            color: #fd7e14; 
             font-weight: bold;
             font-size: 1.2em;
+            white-space: nowrap; /* 確保符號絕對不會換行 */
+            text-align: right;   /* 讓符號靠右貼齊算式 */
+            padding-right: 5px;
         }
 
         .math-line {
