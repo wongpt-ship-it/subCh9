@@ -118,13 +118,20 @@
         /* 加減消元法專用樣式 */
         .math-column {
             display: grid;
-            grid-template-columns: 20px 40px 30px 40px 30px 40px;
+            /* 增加最左側的運算符號欄位 (7個欄位) */
+            grid-template-columns: 30px 40px 50px 30px 40px 30px 40px;
             gap: 10px;
             font-size: 28px;
             justify-content: center;
             align-items: center;
             text-align: center;
             margin-top: 20px;
+        }
+
+        .op-sign {
+            color: #fd7e14; /* 亮橘色讓運算符號更明顯 */
+            font-weight: bold;
+            font-size: 1.2em;
         }
 
         .math-line {
@@ -233,6 +240,8 @@
         <p class="instruction">💡 觀察上下兩式，y 的符號是一正一負。你應該用加法還是減法來消去 y 呢？</p>
 
         <div class="math-column">
+            <!-- 第 1 式 -->
+            <div></div> <!-- 空出運算符號的位置 -->
             <div>(1)</div>
             <div><span class="var-x">2x</span></div>
             <div>+</div>
@@ -240,6 +249,8 @@
             <div>=</div>
             <div>7</div>
 
+            <!-- 第 2 式 -->
+            <div id="op-sign" class="op-sign"></div> <!-- 這裡會顯示 + 或 - -->
             <div>(2)</div>
             <div><span class="var-x">x</span></div>
             <div>-</div>
@@ -250,7 +261,8 @@
             <div class="math-line"></div>
             
             <!-- 動態結果列 -->
-            <div class="result-row" style="opacity: 0;"></div>
+            <div class="result-row" style="opacity: 0;"></div> <!-- 對齊符號區 -->
+            <div class="result-row" style="opacity: 0;"></div> <!-- 對齊編號區 -->
             <div class="result-row" style="opacity: 0;" id="res-x"></div>
             <div class="result-row" style="opacity: 0;" id="res-op"></div>
             <div class="result-row" style="opacity: 0;" id="res-y"></div>
@@ -341,7 +353,8 @@
             const negY = document.getElementById('neg-y');
             const results = document.querySelectorAll('.result-row');
             
-            // 結果列的元素
+            // 運算符號與結果列的元素
+            const opSign = document.getElementById('op-sign');
             const resX = document.getElementById('res-x');
             const resOp = document.getElementById('res-op');
             const resY = document.getElementById('res-y');
@@ -353,6 +366,7 @@
             steps.style.display = 'none';
 
             if(action === 'add') {
+                opSign.innerText = "+)";  // 顯示加號
                 msg.style.color = '#28a745';
                 msg.innerText = "答對了！因為 +y 和 -y 符號相反，相加剛好抵消變成 0，成功消元！";
                 
@@ -370,6 +384,7 @@
                 steps.style.display = 'block';
                 steps.style.animation = 'fadeIn 0.5s ease-in-out';
             } else {
+                opSign.innerText = "-)";  // 顯示減號
                 msg.style.color = '#dc3545';
                 msg.innerText = "注意看下方的結果！如果相減，變成 y - (-y) = 2y。方程式裡同時還有 x 跟 y，並沒有達到「消元」的目的喔！請改用「相加」試試看。";
                 
@@ -380,6 +395,9 @@
                 resVal.innerHTML = '5';
             }
 
+            // 加點小動畫讓符號浮現
+            opSign.style.animation = 'fadeIn 0.3s ease-in-out';
+
             // 顯示結果列
             results.forEach(el => {
                 el.style.opacity = '1';
@@ -388,6 +406,7 @@
         }
 
         function resetElim() {
+            document.getElementById('op-sign').innerText = "";
             document.getElementById('elim-msg').innerText = "";
             document.getElementById('pos-y').classList.remove('cross-out');
             document.getElementById('neg-y').classList.remove('cross-out');
