@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>聯立方程式互動學習套件</title>
+    <style>
+        :root {
+            --color-x: #007bff;
+            --color-y: #dc3545;
+            --bg-color: #f8f9fa;
+            --card-bg: #ffffff;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .tab-btn {
+            padding: 10px 20px;
+            font-size: 16px;
+            font-weight: bold;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            background-color: #e9ecef;
+            color: #495057;
+            transition: all 0.3s ease;
+        }
+
+        .tab-btn.active {
+            background-color: #28a745;
+            color: white;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .card {
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 600px;
+            display: none;
+        }
+
+        .card.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .var-x { color: var(--color-x); font-weight: bold; font-size: 1.2em; }
+        .var-y { color: var(--color-y); font-weight: bold; font-size: 1.2em; }
+        
+        .equation {
+            font-size: 24px;
+            margin: 15px 0;
+            text-align: center;
+            letter-spacing: 2px;
+        }
+
+        /* 代入消元法專用樣式 */
+        .draggable {
+            display: inline-block;
+            padding: 5px 15px;
+            background-color: #ffe8e8;
+            border: 2px dashed var(--color-y);
+            border-radius: 8px;
+            cursor: grab;
+            transition: transform 0.2s;
+        }
+        
+        .draggable:active { cursor: grabbing; transform: scale(1.05); }
+
+        .dropzone {
+            display: inline-block;
+            min-width: 30px;
+            padding: 5px 10px;
+            border: 2px dashed #ccc;
+            background-color: #f1f8ff;
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+
+        .dropzone.dragover {
+            border-color: var(--color-x);
+            background-color: #cce5ff;
+            transform: scale(1.1);
+        }
+
+        .dropzone.dropped {
+            border: 2px solid var(--color-x);
+            background-color: transparent;
+        }
+
+        /* 加減消元法專用樣式 */
+        .math-column {
+            display: grid;
+            grid-template-columns: 20px 40px 30px 40px 30px 40px;
+            gap: 10px;
+            font-size: 28px;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .math-line {
+            grid-column: 1 / -1;
+            height: 2px;
+            background-color: #333;
+            margin: 10px 0;
+        }
+
+        .btn-group {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .action-btn {
+            padding: 10px 20px;
+            font-size: 18px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            background-color: #ffc107;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+
+        .action-btn:hover { background-color: #e0a800; }
+
+        .cross-out {
+            text-decoration: line-through;
+            text-decoration-color: #333;
+            text-decoration-thickness: 3px;
+            opacity: 0.5;
+            transition: all 0.5s;
+        }
+
+        .steps {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #e9ecef;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .instruction {
+            color: #6c757d;
+            text-align: center;
+            font-size: 0.9em;
+            margin-bottom: 20px;
+        }
+
+        .reset-btn {
+            display: block;
+            margin: 20px auto 0;
+            padding: 8px 16px;
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>🔍 聯立方程式解法探索</h1>
+    
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('sub')">代入消元法</button>
+        <button class="tab-btn" onclick="switchTab('elim')">加減消元法</button>
+    </div>
+
+    <!-- 代入消元法區塊 -->
+    <div id="sub-card" class="card active">
+        <h2 style="text-align: center;">代入消元法 (Substitution Method)</h2>
+        <p class="instruction">💡 請將第一式的等值內容「拖曳」到第二式的 <span class="var-x">x</span> 框框中！</p>
+        
+        <div class="equation">
+            (1) <span class="var-x">x</span> = 
+            <div class="draggable" draggable="true" id="drag-item">
+                <span class="var-y">2y</span>
+            </div>
+        </div>
+        
+        <div class="equation" style="margin-top: 40px;">
+            (2) <span class="dropzone" id="drop-zone"><span class="var-x">x</span></span> + <span class="var-y">y</span> = 6
+        </div>
+
+        <div id="sub-steps" class="steps">
+            <p><strong>✨ 成功代入！你看，整條算式只剩下 y 了！</strong></p>
+            <p style="font-size: 20px; text-align: center;">
+                ( <span class="var-y">2y</span> ) + <span class="var-y">y</span> = 6<br>
+                <span class="var-y">3y</span> = 6<br>
+                <strong><span class="var-y">y = 2</span></strong>
+            </p>
+            <p style="text-align: center;">再將 y = 2 代回 (1) 式，得到 <strong><span class="var-x">x = 4</span></strong></p>
+        </div>
+        
+        <button class="reset-btn" onclick="resetSub()">重新練習</button>
+    </div>
+
+    <!-- 加減消元法區塊 -->
+    <div id="elim-card" class="card">
+        <h2 style="text-align: center;">加減消元法 (Elimination Method)</h2>
+        <p class="instruction">💡 觀察上下兩式，y 的符號是一正一負。你應該用加法還是減法來消去 y 呢？</p>
+
+        <div class="math-column">
+            <div>(1)</div>
+            <div><span class="var-x">2x</span></div>
+            <div>+</div>
+            <div id="pos-y"><span class="var-y">y</span></div>
+            <div>=</div>
+            <div>7</div>
+
+            <div>(2)</div>
+            <div><span class="var-x">x</span></div>
+            <div>-</div>
+            <div id="neg-y"><span class="var-y">y</span></div>
+            <div>=</div>
+            <div>2</div>
+            
+            <div class="math-line"></div>
+            
+            <!-- 動態結果列 -->
+            <div class="result-row" style="opacity: 0;"></div>
+            <div class="result-row" style="opacity: 0;" id="res-x"></div>
+            <div class="result-row" style="opacity: 0;" id="res-op"></div>
+            <div class="result-row" style="opacity: 0;" id="res-y"></div>
+            <div class="result-row" style="opacity: 0;">=</div>
+            <div class="result-row" style="opacity: 0;" id="res-val"></div>
+        </div>
+
+        <div class="btn-group">
+            <button class="action-btn" onclick="checkElimination('add')">兩式相加 (+)</button>
+            <button class="action-btn" onclick="checkElimination('sub')">兩式相減 (-)</button>
+        </div>
+
+        <p id="elim-msg" style="text-align: center; font-weight: bold; margin-top: 15px; min-height: 48px;"></p>
+
+        <div id="elim-steps" class="steps">
+            <p><strong>✨ y 成功被消去了！</strong></p>
+            <p style="font-size: 20px; text-align: center;">
+                <span class="var-x">3x</span> = 9<br>
+                <strong><span class="var-x">x = 3</span></strong>
+            </p>
+            <p style="text-align: center;">將 x = 3 代回 (1) 式，得到 6 + y = 7，所以 <strong><span class="var-y">y = 1</span></strong></p>
+            <button class="reset-btn" onclick="resetElim()">重新練習</button>
+        </div>
+    </div>
+
+    <script>
+        // --- 頁籤切換邏輯 ---
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.card').forEach(card => card.classList.remove('active'));
+            
+            if(tab === 'sub') {
+                document.querySelector('.tab-btn:nth-child(1)').classList.add('active');
+                document.getElementById('sub-card').classList.add('active');
+            } else {
+                document.querySelector('.tab-btn:nth-child(2)').classList.add('active');
+                document.getElementById('elim-card').classList.add('active');
+            }
+        }
+
+        // --- 代入消元法 (拖曳邏輯) ---
+        const dragItem = document.getElementById('drag-item');
+        const dropZone = document.getElementById('drop-zone');
+        const subSteps = document.getElementById('sub-steps');
+
+        dragItem.addEventListener('dragstart', (e) => {
+            e.dataTransfer.setData('text/plain', '2y');
+            setTimeout(() => dragItem.style.opacity = '0.5', 0);
+        });
+
+        dragItem.addEventListener('dragend', () => {
+            dragItem.style.opacity = '1';
+        });
+
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('dragover');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            
+            // 替換內容
+            dropZone.innerHTML = '( <span class="var-y">2y</span> )';
+            dropZone.classList.add('dropped');
+            
+            // 顯示解答步驟
+            subSteps.style.display = 'block';
+            subSteps.style.animation = 'fadeIn 0.5s ease-in-out';
+        });
+
+        function resetSub() {
+            dropZone.innerHTML = '<span class="var-x">x</span>';
+            dropZone.classList.remove('dropped');
+            subSteps.style.display = 'none';
+        }
+
+        // --- 加減消元法 (直式邏輯) ---
+        function checkElimination(action) {
+            const msg = document.getElementById('elim-msg');
+            const steps = document.getElementById('elim-steps');
+            const posY = document.getElementById('pos-y');
+            const negY = document.getElementById('neg-y');
+            const results = document.querySelectorAll('.result-row');
+            
+            // 結果列的元素
+            const resX = document.getElementById('res-x');
+            const resOp = document.getElementById('res-op');
+            const resY = document.getElementById('res-y');
+            const resVal = document.getElementById('res-val');
+
+            // 每次點擊先重置狀態
+            posY.classList.remove('cross-out');
+            negY.classList.remove('cross-out');
+            steps.style.display = 'none';
+
+            if(action === 'add') {
+                msg.style.color = '#28a745';
+                msg.innerText = "答對了！因為 +y 和 -y 符號相反，相加剛好抵消變成 0，成功消元！";
+                
+                // 設定相加的結果： 3x = 9
+                resX.innerHTML = '<span class="var-x">3x</span>';
+                resOp.innerHTML = '';
+                resY.innerHTML = '';
+                resVal.innerHTML = '9';
+
+                // 畫掉 y
+                posY.classList.add('cross-out');
+                negY.classList.add('cross-out');
+                
+                // 顯示計算步驟
+                steps.style.display = 'block';
+                steps.style.animation = 'fadeIn 0.5s ease-in-out';
+            } else {
+                msg.style.color = '#dc3545';
+                msg.innerText = "注意看下方的結果！如果相減，變成 y - (-y) = 2y。方程式裡同時還有 x 跟 y，並沒有達到「消元」的目的喔！請改用「相加」試試看。";
+                
+                // 設定相減的結果： x + 2y = 5
+                resX.innerHTML = '<span class="var-x">x</span>';
+                resOp.innerHTML = '+';
+                resY.innerHTML = '<span class="var-y">2y</span>';
+                resVal.innerHTML = '5';
+            }
+
+            // 顯示結果列
+            results.forEach(el => {
+                el.style.opacity = '1';
+                el.style.transition = 'opacity 0.8s ease';
+            });
+        }
+
+        function resetElim() {
+            document.getElementById('elim-msg').innerText = "";
+            document.getElementById('pos-y').classList.remove('cross-out');
+            document.getElementById('neg-y').classList.remove('cross-out');
+            document.getElementById('elim-steps').style.display = 'none';
+            document.querySelectorAll('.result-row').forEach(el => el.style.opacity = '0');
+        }
+    </script>
+</body>
+</html>
